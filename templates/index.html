@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Powered Smart Traffic Monitoring and Violation Detection</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">&#128663;</div>
+                <div class="brand-text">
+                    <h2>TrafficAI</h2>
+                    <span>Monitoring & Violation</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <span class="nav-icon">&#128202;</span> Dashboard
+                </button>
+                <button class="nav-item" data-tab="live-monitor">
+                    <span class="nav-icon">&#128250;</span> Live Monitoring
+                </button>
+                <button class="nav-item" data-tab="active-violations">
+                    <span class="nav-icon">&#9888;</span> Violation Detection
+                </button>
+                <button class="nav-item" data-tab="violation-history">
+                    <span class="nav-icon">&#128221;</span> Violation History
+                </button>
+                <button class="nav-item" data-tab="about">
+                    <span class="nav-icon">&#8505;</span> About System
+                </button>
+            </nav>
+
+            <div class="system-status-box">
+                <div class="status-indicator">
+                    <span class="status-dot pulse"></span>
+                    <span id="system-status-text">System Active</span>
+                </div>
+                <div class="status-meta">
+                    <div>Model: <strong>YOLOv8n</strong></div>
+                    <div>FPS: <strong id="sidebar-fps">0.0</strong></div>
+                    <div>Signal: <span id="sidebar-signal-badge" class="badge badge-green">GREEN</span></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="page-title">Dashboard Overview</h1>
+                    <p id="page-desc">Comprehensive real-time traffic statistics and violation metrics</p>
+                </div>
+                <div class="header-actions">
+                    <span id="traffic-density-pill" class="pill pill-green">Density: LOW</span>
+                    <button class="btn btn-secondary btn-sm" id="btn-refresh-all">&#8635; Refresh</button>
+                </div>
+            </header>
+
+            <!-- TAB 1: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-pane active">
+                <!-- KPI Stat Cards -->
+                <div class="stats-grid">
+                    <div class="card stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Vehicles Counted</span>
+                            <span class="stat-badge">&#128663; Total</span>
+                        </div>
+                        <div class="stat-value" id="kpi-total-counted">0</div>
+                        <div class="stat-footer">Active in frame: <strong id="kpi-active-vehicles">0</strong></div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Traffic Density</span>
+                            <span class="stat-badge" id="kpi-density-badge">&#9679; LOW</span>
+                        </div>
+                        <div class="stat-value" id="kpi-density-text">LOW</div>
+                        <div class="stat-footer">Occupancy ratio: <strong id="kpi-density-ratio">0%</strong></div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Violations Logged</span>
+                            <span class="stat-badge badge-red">&#9888; Alerts</span>
+                        </div>
+                        <div class="stat-value text-danger" id="kpi-violations-count">0</div>
+                        <div class="stat-footer">Evidence records in database</div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Vehicle Flow Rate</span>
+                            <span class="stat-badge">&#9201; Real-Time</span>
+                        </div>
+                        <div class="stat-value" id="kpi-flow-rate">0</div>
+                        <div class="stat-footer">Vehicles per minute</div>
+                    </div>
+                </div>
+
+                <!-- Two Column Details -->
+                <div class="grid-2-col">
+                    <!-- Vehicle Category Breakdown Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Vehicle Categories</h3>
+                            <span class="text-muted">Breakdown by detected class</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="category-list">
+                                <div class="category-item">
+                                    <div class="cat-info">
+                                        <span class="cat-dot dot-car"></span>
+                                        <span class="cat-name">Cars</span>
+                                    </div>
+                                    <span class="cat-count" id="cat-car-count">0</span>
+                                </div>
+                                <div class="category-item">
+                                    <div class="cat-info">
+                                        <span class="cat-dot dot-bike"></span>
+                                        <span class="cat-name">Motorcycles & Bikes</span>
+                                    </div>
+                                    <span class="cat-count" id="cat-bike-count">0</span>
+                                </div>
+                                <div class="category-item">
+                                    <div class="cat-info">
+                                        <span class="cat-dot dot-bus"></span>
+                                        <span class="cat-name">Buses</span>
+                                    </div>
+                                    <span class="cat-count" id="cat-bus-count">0</span>
+                                </div>
+                                <div class="category-item">
+                                    <div class="cat-info">
+                                        <span class="cat-dot dot-truck"></span>
+                                        <span class="cat-name">Trucks</span>
+                                    </div>
+                                    <span class="cat-count" id="cat-truck-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Violations Distribution Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Violations by Type</h3>
+                            <span class="text-muted">Detected safety infractions</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="category-list">
+                                <div class="category-item">
+                                    <div class="cat-info">
+                                        <span class="badge badge-red">Red Light</span>
+                                        <span>Red-Light Signal Crossing</span>
+                                    </div>
+                                    <span class="cat-count text-danger" id="vtype-red-light">0</span>
+                                </div>
+                                <div class="category-item">
+                                    <div class="cat-info">
+                                        <span class="badge badge-amber">Wrong Way</span>
+                                        <span>Opposite Lane Driving</span>
+                                    </div>
+                                    <span class="cat-count text-danger" id="vtype-wrong-way">0</span>
+                                </div>
+                                <div class="category-item">
+                                    <div class="cat-info">
+                                        <span class="badge badge-purple">Triple Riding</span>
+                                        <span>3+ Riders on Two-Wheeler</span>
+                                    </div>
+                                    <span class="cat-count text-danger" id="vtype-triple-riding">0</span>
+                                </div>
+                                <div class="category-item">
+                                    <div class="cat-info">
+                                        <span class="badge badge-orange">No Helmet</span>
+                                        <span>Unprotected Two-Wheeler Rider</span>
+                                    </div>
+                                    <span class="cat-count text-danger" id="vtype-no-helmet">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Violations Table Preview -->
+                <div class="card mt-20">
+                    <div class="card-header flex-between">
+                        <h3>Recent Violations</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="navigateToTab('violation-history')">View All History &rarr;</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Time</th>
+                                        <th>Violation Type</th>
+                                        <th>Vehicle</th>
+                                        <th>Confidence</th>
+                                        <th>Evidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-recent-violations-body">
+                                    <tr><td colspan="6" class="text-center text-muted">No violations logged yet</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: LIVE MONITORING -->
+            <section id="tab-live-monitor" class="tab-pane">
+                <div class="monitor-layout">
+                    <!-- Video Feed Container -->
+                    <div class="video-container card">
+                        <div class="video-header flex-between">
+                            <div class="feed-title">
+                                <span class="live-badge">&#9679; LIVE FEED</span>
+                                <span id="current-source-label" class="text-muted ml-10">kitti_traffic.mp4</span>
+                            </div>
+                            <div class="video-controls">
+                                <button class="btn btn-sm btn-secondary" id="btn-pause-stream" title="Pause / Resume">&#10074;&#10074; Pause</button>
+                                <button class="btn btn-sm btn-secondary" id="btn-reset-counters" title="Reset Counts">&#8635; Reset Counts</button>
+                            </div>
+                        </div>
+
+                        <div class="stream-wrapper">
+                            <img id="live-stream-img" src="/api/monitoring/stream" alt="AI Traffic Live Monitoring Feed" />
+                        </div>
+
+                        <div class="video-footer flex-between">
+                            <div class="hud-badges">
+                                <span class="badge badge-info" id="monitor-fps">FPS: 0.0</span>
+                                <span class="badge badge-secondary" id="monitor-active-count">Active: 0</span>
+                                <span class="badge badge-secondary" id="monitor-density-badge">Density: LOW</span>
+                            </div>
+                            <div class="signal-indicator-bar">
+                                <span>Signal Phase:</span>
+                                <strong id="monitor-signal-text" class="text-success">GREEN</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side Controls Panel -->
+                    <div class="controls-panel">
+                        <!-- Video Source Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Video Source</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Select Feed Source:</label>
+                                    <select id="select-video-source" class="form-control">
+                                        <option value="sample_data/kitti_traffic.mp4">Sample: KITTI Real Traffic (Urban)</option>
+                                    </select>
+                                </div>
+                                <div class="btn-group-full mt-10">
+                                    <button class="btn btn-primary btn-sm" id="btn-apply-source">Load Selected Video</button>
+                                    <button class="btn btn-secondary btn-sm" id="btn-use-webcam">&#128247; Use Webcam (0)</button>
+                                </div>
+
+                                <hr class="divider" />
+
+                                <div class="upload-section">
+                                    <label>Upload Video (.mp4, .avi):</label>
+                                    <input type="file" id="input-video-file" accept="video/mp4,video/avi,video/quicktime,video/x-matroska" class="file-input" />
+                                    <button class="btn btn-secondary btn-sm btn-block mt-8" id="btn-upload-video">Upload & Analyze</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Traffic Light Simulation Controls -->
+                        <div class="card mt-15">
+                            <div class="card-header">
+                                <h3>Virtual Traffic Signal</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Signal Mode:</label>
+                                    <select id="select-signal-mode" class="form-control">
+                                        <option value="auto">Auto-Cycle (Green -> Yellow -> Red)</option>
+                                        <option value="manual_red">Manual: Force RED (Test Violations)</option>
+                                        <option value="manual_green">Manual: Force GREEN</option>
+                                        <option value="manual_yellow">Manual: Force YELLOW</option>
+                                    </select>
+                                </div>
+                                <div class="btn-group-full mt-10">
+                                    <button class="btn btn-sm btn-danger" onclick="setSignalMode('manual_red')">&#128308; Switch RED</button>
+                                    <button class="btn btn-sm btn-success" onclick="setSignalMode('manual_green')">&#128994; Switch GREEN</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detection & Line Calibration Settings -->
+                        <div class="card mt-15">
+                            <div class="card-header">
+                                <h3>Rule Calibration</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label>Stop Line Position (Height %): <strong id="label-stop-line-val">68%</strong></label>
+                                    <input type="range" id="slider-stop-line" min="20" max="90" value="68" class="form-range" />
+                                </div>
+
+                                <div class="form-group mt-10">
+                                    <label>Allowed Lane Direction:</label>
+                                    <select id="select-lane-direction" class="form-control">
+                                        <option value="down">Downward (Vehicles moving down/forward)</option>
+                                        <option value="up">Upward (Vehicles moving up/away)</option>
+                                        <option value="right">Rightward (Moving Left to Right)</option>
+                                        <option value="left">Leftward (Moving Right to Left)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group mt-10">
+                                    <label>Detection Confidence: <strong id="label-conf-val">0.35</strong></label>
+                                    <input type="range" id="slider-confidence" min="15" max="85" value="35" class="form-range" />
+                                </div>
+
+                                <button class="btn btn-secondary btn-sm btn-block mt-10" id="btn-save-settings">Apply Calibration</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: VIOLATION DETECTION (LIVE ALERTS) -->
+            <section id="tab-active-violations" class="tab-pane">
+                <div class="card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h3>Real-Time Traffic Violation Stream</h3>
+                            <span class="text-muted">Live snapshot feed of safety infractions detected in real-time</span>
+                        </div>
+                        <span class="pill pill-red" id="live-violations-badge">0 Violations</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="violation-cards-stream" class="violation-grid">
+                            <div class="empty-state">
+                                <div class="empty-icon">&#9989;</div>
+                                <h4>No violations currently flagged</h4>
+                                <p class="text-muted">When a vehicle runs a red light, drives wrong-way, or violates passenger/helmet rules, evidence will appear here immediately.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: VIOLATION HISTORY -->
+            <section id="tab-violation-history" class="tab-pane">
+                <div class="card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h3>Violation History Database</h3>
+                            <span class="text-muted">Searchable archive of all recorded incidents with visual proof</span>
+                        </div>
+                        <div class="table-actions">
+                            <a href="/api/violations/export/csv" class="btn btn-secondary btn-sm" download>&#128190; Export CSV</a>
+                            <button class="btn btn-danger btn-sm" id="btn-clear-violations">&#128465; Clear All</button>
+                        </div>
+                    </div>
+
+                    <!-- Filters Toolbar -->
+                    <div class="filters-toolbar">
+                        <div class="filter-item">
+                            <label>Filter by Type:</label>
+                            <select id="filter-violation-type" class="form-control form-control-sm">
+                                <option value="all">All Violations</option>
+                                <option value="Red Light Violation">Red Light Violation</option>
+                                <option value="Wrong-Way Driving">Wrong-Way Driving</option>
+                                <option value="Triple Riding">Triple Riding</option>
+                                <option value="No Helmet">No Helmet</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <label>Filter by Vehicle:</label>
+                            <select id="filter-vehicle-type" class="form-control form-control-sm">
+                                <option value="all">All Vehicles</option>
+                                <option value="car">Car</option>
+                                <option value="motorcycle">Motorcycle</option>
+                                <option value="bus">Bus</option>
+                                <option value="truck">Truck</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item flex-grow">
+                            <label>Search details / source:</label>
+                            <input type="text" id="filter-search" class="form-control form-control-sm" placeholder="Search by vehicle ID, video, or note..." />
+                        </div>
+
+                        <div class="filter-item align-end">
+                            <button class="btn btn-primary btn-sm" id="btn-apply-filters">Filter</button>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Date & Time (UTC)</th>
+                                        <th>Violation Type</th>
+                                        <th>Vehicle Class</th>
+                                        <th>Vehicle ID</th>
+                                        <th>Confidence</th>
+                                        <th>Source</th>
+                                        <th>Evidence Proof</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <tr><td colspan="9" class="text-center text-muted">Loading records...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: ABOUT -->
+            <section id="tab-about" class="tab-pane">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>About the Smart Traffic Monitoring & Violation Detection System</h3>
+                    </div>
+                    <div class="card-body about-content">
+                        <h4>1. Objective & Overview</h4>
+                        <p>This web application is a complete, automated intelligent transportation system (ITS) designed to monitor vehicle flow, estimate real-time traffic density, and detect common road safety violations using deep learning and computer vision.</p>
+
+                        <h4>2. Architecture & Tech Stack</h4>
+                        <ul class="tech-list">
+                            <li><strong>AI / Deep Learning:</strong> Ultralytics YOLOv8 (nano architecture) for multi-class vehicle detection (Cars, Motorcycles, Buses, Trucks, Bicycles) and pedestrians/riders.</li>
+                            <li><strong>Multi-Object Tracking:</strong> Hungarian Algorithm assignment via <code>scipy.optimize.linear_sum_assignment</code> combining spatial IoU and centroid distance metrics to maintain unique vehicle IDs, prevent duplicate counting, and compute velocity vectors.</li>
+                            <li><strong>Computer Vision:</strong> OpenCV for frame-by-frame processing, stop-line intersection geometry, trajectory tracking, and head ROI computer vision inspection.</li>
+                            <li><strong>Backend Framework:</strong> FastAPI with asynchronous endpoints, streaming MJPEG responses, and dependency injection.</li>
+                            <li><strong>Database:</strong> SQLite with SQLAlchemy ORM storing detailed violation records and periodic traffic density logs.</li>
+                            <li><strong>Frontend:</strong> Clean, responsive vanilla HTML5, CSS3, and JavaScript dashboard without unnecessary decorative bloat.</li>
+                        </ul>
+
+                        <h4>3. Violation Detection Methodologies</h4>
+                        <div class="methodology-grid">
+                            <div class="method-card">
+                                <h5>&#128308; Red-Light Signal Violation</h5>
+                                <p>A configurable virtual stop line is monitored in synchrony with a virtual traffic signal state machine. When the signal is RED, any tracked vehicle whose motion vector crosses the stop line triggers a Red Light violation and captures full frame evidence with the active signal indicator.</p>
+                            </div>
+
+                            <div class="method-card">
+                                <h5>&#128260; Wrong-Way Driving Detection</h5>
+                                <p>Vehicles maintain a trajectory vector over historical frames. The normalized displacement vector is computed against the configured lane flow direction. If the dot product indicates opposite movement (&gt; 115&deg; divergence) over sustained frames, a Wrong-Way violation is logged.</p>
+                            </div>
+
+                            <div class="method-card">
+                                <h5>&#128692; Triple Riding Detection</h5>
+                                <p>For each tracked two-wheeler (motorcycle or bicycle), the system computes spatial containment of detected persons within the upper and central bounding envelope of the bike. When 3 or more distinct person bounding boxes are associated with a single bike, a Triple Riding infraction is flagged.</p>
+                            </div>
+
+                            <div class="method-card">
+                                <h5>&#9937; No Helmet Detection</h5>
+                                <p>For riders detected on two-wheelers, the upper crown/head region is isolated. The computer vision pipeline analyzes skin/hair color tone distributions vs smooth circular helmet protective contours. A custom YOLO helmet model (<code>helmet_yolov8.pt</code>) can also be placed into the <code>models/</code> directory to automatically upgrade to deep-learned helmet inference.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Evidence Modal Viewer -->
+    <div id="evidence-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header flex-between">
+                <h3 id="modal-title">Violation Evidence Snapshot</h3>
+                <button class="modal-close" onclick="closeEvidenceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="modal-img" src="" alt="Violation Snapshot" />
+                <div class="modal-details" id="modal-details">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="modal-download-btn" href="#" download class="btn btn-primary btn-sm">&#128190; Download Snapshot</a>
+                <button class="btn btn-secondary btn-sm" onclick="closeEvidenceModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/live_monitor.js"></script>
+    <script src="/static/js/violations.js"></script>
+</body>
+</html>
